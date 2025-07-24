@@ -92,6 +92,11 @@
 
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+    const size = 100;
+    const divisions = 10;
+    const gridHelper = new THREE.GridHelper(size, divisions, colorGrid);
+    const colorGrid =  0x888888;
+    scene.add(gridHelper)
 
     const canvas = document.getElementById("gameCanvas");
     const renderer = new THREE.WebGLRenderer({ canvas });
