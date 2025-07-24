@@ -34,11 +34,12 @@
     }
 
     .inventory-slot {
-      width: 50px;
-      height: 50px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid #aaa;
-      border-radius: 4px;
+      width: 60px;
+      height: 60px;
+      border: 0px solid transparent;
+      border-radius: 6px;
+      background-size: cover;
+      background-image: url('hotbar.png'); /* Use PNG as border */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -46,8 +47,8 @@
     }
 
     .inventory-slot img {
-      max-width: 100%;
-      max-height: 100%;
+      width: 80%;
+      height: 80%;
       pointer-events: none;
       user-select: none;
     }
@@ -77,13 +78,13 @@
   <!-- Inventory UI -->
   <div id="inventory" class="hidden">
     <div class="inventory-slot" data-slot="0">
-      <img src="hotbar.png" id="item0" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
+      <img src="item1.png" id="item0" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
     </div>
     <div class="inventory-slot" data-slot="1">
-      <img src="hotbar.png" id="item1" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
+      <img src="item2.png" id="item1" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
     </div>
     <div class="inventory-slot" data-slot="2">
-      <img src="hotbar.png" id="item2" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
+      <img src="item3.png" id="item2" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
     </div>
   </div>
 
@@ -92,11 +93,6 @@
 
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-    const size = 100;
-    const divisions = 10;
-    const gridHelper = new THREE.GridHelper(size, divisions, colorGrid);
-    const colorGrid =  0x888888;
-    scene.add(gridHelper)
 
     const canvas = document.getElementById("gameCanvas");
     const renderer = new THREE.WebGLRenderer({ canvas });
@@ -105,6 +101,12 @@
     renderer.setSize(innerWidth, innerHeight);
     camera.position.z = 5;
 
+    // Grid Helper (with working color)
+    const gridColor = 0x888888;
+    const gridHelper = new THREE.GridHelper(100, 10, gridColor, gridColor);
+    scene.add(gridHelper);
+
+    // Sample cube
     const cube = new THREE.Mesh(
       new THREE.BoxGeometry(),
       new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -136,9 +138,7 @@
     slots.forEach((slot) => {
       slot.addEventListener("touchstart", (e) => {
         const img = slot.querySelector("img");
-        if (img) {
-          img.dataset.dragging = "true";
-        }
+        if (img) img.dataset.dragging = "true";
       });
 
       slot.addEventListener("touchend", (e) => {
@@ -154,7 +154,6 @@
         const img = slot.querySelector("img");
         if (img) {
           console.log("Touched item in slot:", slot.dataset.slot);
-          // Add item interaction logic here
         }
       });
     });
