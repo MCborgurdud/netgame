@@ -13,13 +13,11 @@
       font-family: sans-serif;
       background: #000;
     }
-
     canvas {
       display: block;
       width: 100vw;
       height: 100vh;
     }
-
     #inventory {
       position: absolute;
       bottom: 60px;
@@ -32,31 +30,25 @@
       border-radius: 8px;
       z-index: 10;
     }
-
     .inventory-slot {
       width: 60px;
       height: 60px;
       border: 0px solid transparent;
       border-radius: 6px;
       background-size: cover;
-      background-image: url('hotbar.png'); /* Use PNG as border */
+      background-image: url('hotbar.png');
       display: flex;
       align-items: center;
       justify-content: center;
       touch-action: none;
     }
-
     .inventory-slot img {
       width: 80%;
       height: 80%;
       pointer-events: none;
       user-select: none;
     }
-
-    .hidden {
-      display: none;
-    }
-
+    .hidden { display: none; }
     #toggleInventory {
       position: absolute;
       bottom: 10px;
@@ -75,7 +67,6 @@
 <body>
   <canvas id="gameCanvas"></canvas>
 
-  <!-- Inventory UI -->
   <div id="inventory" class="hidden">
     <div class="inventory-slot" data-slot="0">
       <img src="item1.png" id="item0" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
@@ -88,25 +79,53 @@
     </div>
   </div>
 
-  <!-- Mobile Inventory Button -->
   <button id="toggleInventory">Toggle Inventory</button>
 
   <script type="module">
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+    import { PointerLockControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
 
     const canvas = document.getElementById("gameCanvas");
     const renderer = new THREE.WebGLRenderer({ canvas });
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
     renderer.setSize(innerWidth, innerHeight);
-    camera.position.z = 5;
+    camera.position.set(0, 1.6, 5); // height like a human
 
-    // Grid Helper (with working color)
-    const gridColor = 0x888888;
-    const gridHelper = new THREE.GridHelper(100, 10, gridColor, gridColor);
+    // Controls
+    const controls = new PointerLockControls(camera, document.body);
+    scene.add(controls.getObject());
+
+    canvas.addEventListener('click', () => {
+      controls.lock();
+    });
+
+    // Movement
+    const keys = {};
+    document.addEventListener("keydown", e => keys[e.code] = true);
+    document.addEventListener("keyup", e => keys[e.code] = false);
+
+    // Clock for delta movement
+    const clock = new THREE.Clock();
+
+    function handleMovement(delta) {
+      const speed = 5;
+      const direction = new THREE.Vector3();
+
+      if (keys["KeyW"]) direction.z -= 1;
+      if (keys["KeyS"]) direction.z += 1;
+      if (keys["KeyA"]) direction.x -= 1;
+      if (keys["KeyD"]) direction.x += 1;
+
+      direction.normalize().applyEuler(camera.rotation);
+      controls.moveRight(direction.x * speed * delta);
+      controls.moveForward(direction.z * speed * delta);
+    }
+
+    // Grid + cube
+    const gridHelper = new THREE.GridHelper(100, 10, 0x888888, 0x888888);
     scene.add(gridHelper);
 
-    // Sample cube
     const cube = new THREE.Mesh(
       new THREE.BoxGeometry(),
       new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -115,6 +134,8 @@
 
     function animate() {
       requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      handleMovement(delta);
       cube.rotation.y += 0.01;
       renderer.render(scene, camera);
     }
