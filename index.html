@@ -88,70 +88,70 @@
   <button id="toggleInventory">Toggle Inventory</button>
 
   <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three-js@79.0.0/three.min.js";
+  import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
-    // === THREE.js Setup ===
-    const canvas = document.getElementById("gameCanvas");
-    const renderer = new THREE.WebGLRenderer({ canvas });
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+  // === THREE.js Setup ===
+  const canvas = document.getElementById("gameCanvas");
+  const renderer = new THREE.WebGLRenderer({ canvas });
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
 
+  renderer.setSize(innerWidth, innerHeight);
+  camera.position.z = 5;
+
+  const cube = new THREE.Mesh(
+    new THREE.BoxGeometry(),
+    new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+  );
+  scene.add(cube);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    cube.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener("resize", () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
-    camera.position.z = 5;
+  });
 
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(),
-      new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-    );
-    scene.add(cube);
+  // === UI Logic ===
+  const inventory = document.getElementById("inventory");
+  const toggleBtn = document.getElementById("toggleInventory");
+  toggleBtn.addEventListener("click", () => {
+    inventory.classList.toggle("hidden");
+  });
 
-    function animate() {
-      requestAnimationFrame(animate);
-      cube.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    window.addEventListener("resize", () => {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
+  // === Drag & Drop ===
+  const slots = document.querySelectorAll(".inventory-slot");
+  slots.forEach((slot) => {
+    slot.addEventListener("touchstart", (e) => {
+      const img = slot.querySelector("img");
+      if (img) {
+        img.dataset.dragging = "true";
+      }
     });
 
-    // === UI Logic ===
-    const inventory = document.getElementById("inventory");
-    const toggleBtn = document.getElementById("toggleInventory");
-    toggleBtn.addEventListener("click", () => {
-      inventory.classList.toggle("hidden");
+    slot.addEventListener("touchend", (e) => {
+      const dragging = document.querySelector("img[data-dragging='true']");
+      if (dragging && dragging !== slot.firstChild) {
+        dragging.removeAttribute("data-dragging");
+        slot.innerHTML = "";
+        slot.appendChild(dragging);
+      }
     });
 
-    // === Drag & Drop ===
-    const slots = document.querySelectorAll(".inventory-slot");
-    slots.forEach((slot) => {
-      slot.addEventListener("touchstart", (e) => {
-        const img = slot.querySelector("img");
-        if (img) {
-          img.dataset.dragging = "true";
-        }
-      });
-
-      slot.addEventListener("touchend", (e) => {
-        const dragging = document.querySelector("img[data-dragging='true']");
-        if (dragging && dragging !== slot.firstChild) {
-          dragging.removeAttribute("data-dragging");
-          slot.innerHTML = "";
-          slot.appendChild(dragging);
-        }
-      });
-
-      slot.addEventListener("click", () => {
-        const img = slot.querySelector("img");
-        if (img) {
-          console.log("Touched item in slot:", slot.dataset.slot);
-          // Use this to trigger placing or using an item
-        }
-      });
+    slot.addEventListener("click", () => {
+      const img = slot.querySelector("img");
+      if (img) {
+        console.log("Touched item in slot:", slot.dataset.slot);
+        // Use this to trigger placing or using an item
+      }
     });
-  </script>
+  });
+</script>
 </body>
   </html>
