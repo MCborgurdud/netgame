@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Minecraft Clone - Mobile Inventory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      font-family: sans-serif;
+      background: #000;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #inventory {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      z-index: 10;
+    }
+
+    .inventory-slot {
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #aaa;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+
+    .inventory-slot img {
+      max-width: 90%;
+      max-height: 90%;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #toggleInventory {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 16px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Inventory UI -->
+  <div id="inventory" class="hidden">
+    <div class="inventory-slot" data-slot="0"></div>
+    <div class="inventory-slot" data-slot="1"></div>
+    <div class="inventory-slot" data-slot="2">
+      <img src="https://i.imgur.com/4QxR6oD.png" id="item1" draggable="true"
+           ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
+    </div>
+  </div>
+
+  <!-- Mobile Inventory Button -->
+  <button id="toggleInventory">Toggle Inventory</button>
+
+  <script type="module">
+    import * as THREE from "https://cdn.skypack.dev/three@0.160.0";
+
+    // === THREE.js Setup ===
+    const canvas = document.getElementById("gameCanvas");
+    const renderer = new THREE.WebGLRenderer({ canvas });
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+
+    renderer.setSize(innerWidth, innerHeight);
+    camera.position.z = 5;
+
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(),
+      new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+    );
+    scene.add(cube);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      cube.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    // === UI Logic ===
+    const inventory = document.getElementById("inventory");
+    const toggleBtn = document.getElementById("toggleInventory");
+    toggleBtn.addEventListener("click", () => {
+      inventory.classList.toggle("hidden");
+    });
+
+    // === Drag & Drop ===
+    const slots = document.querySelectorAll(".inventory-slot");
+    slots.forEach((slot) => {
+      slot.addEventListener("touchstart", (e) => {
+        const img = slot.querySelector("img");
+        if (img) {
+          img.dataset.dragging = "true";
+        }
+      });
+
+      slot.addEventListener("touchend", (e) => {
+        const dragging = document.querySelector("img[data-dragging='true']");
+        if (dragging && dragging !== slot.firstChild) {
+          dragging.removeAttribute("data-dragging");
+          slot.innerHTML = "";
+          slot.appendChild(dragging);
+        }
+      });
+
+      slot.addEventListener("click", () => {
+        const img = slot.querySelector("img");
+        if (img) {
+          console.log("Touched item in slot:", slot.dataset.slot);
+          // Use this to trigger placing or using an item
+        }
+      });
+    });
+  </script>
+</body>
+  </html>
