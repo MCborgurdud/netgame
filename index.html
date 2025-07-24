@@ -2,16 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Minecraft Clone - Mobile Inventory</title>
+  <title>Minecraft Clone - Movement + Inventory</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      height: 100%;
-      font-family: sans-serif;
-      background: #000;
+      margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; font-family: sans-serif;
     }
     canvas {
       display: block;
@@ -33,7 +28,6 @@
     .inventory-slot {
       width: 60px;
       height: 60px;
-      border: 0px solid transparent;
       border-radius: 6px;
       background-size: cover;
       background-image: url('hotbar.png');
@@ -62,20 +56,33 @@
       color: white;
       z-index: 10;
     }
+    #instructions {
+      position: absolute;
+      top: 40%;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 20px;
+      user-select: none;
+      z-index: 20;
+      font-family: sans-serif;
+    }
   </style>
 </head>
 <body>
+  <div id="instructions">Click anywhere to lock pointer and start moving. Use WASD to move, mouse to look.</div>
+
   <canvas id="gameCanvas"></canvas>
 
   <div id="inventory" class="hidden">
     <div class="inventory-slot" data-slot="0">
-      <img src="item1.png" id="item0" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
+      <img src="item1.png" draggable="true" id="item0" ondragstart="event.dataTransfer.setData('text/plain', event.target.id)">
     </div>
     <div class="inventory-slot" data-slot="1">
-      <img src="item2.png" id="item1" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
+      <img src="item2.png" draggable="true" id="item1" ondragstart="event.dataTransfer.setData('text/plain', event.target.id)">
     </div>
     <div class="inventory-slot" data-slot="2">
-      <img src="item3.png" id="item2" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',event.target.id)">
+      <img src="item3.png" draggable="true" id="item2" ondragstart="event.dataTransfer.setData('text/plain', event.target.id)">
     </div>
   </div>
 
@@ -85,44 +92,63 @@
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
     import { PointerLockControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
 
-    const canvas = document.getElementById("gameCanvas");
+    const instructions = document.getElementById('instructions');
+    const canvas = document.getElementById('gameCanvas');
     const renderer = new THREE.WebGLRenderer({ canvas });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
-    renderer.setSize(innerWidth, innerHeight);
-    camera.position.set(0, 1.6, 5); // height like a human
+    scene.background = new THREE.Color(0x202020);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.6, 5);
 
     // Controls
     const controls = new PointerLockControls(camera, document.body);
     scene.add(controls.getObject());
 
-    canvas.addEventListener('click', () => {
+    instructions.addEventListener('click', () => {
       controls.lock();
     });
+    controls.addEventListener('lock', () => {
+      instructions.style.display = 'none';
+    });
+    controls.addEventListener('unlock', () => {
+      instructions.style.display = '';
+    });
 
-    // Movement
+    // Movement state
     const keys = {};
-    document.addEventListener("keydown", e => keys[e.code] = true);
-    document.addEventListener("keyup", e => keys[e.code] = false);
+    document.addEventListener('keydown', e => keys[e.code] = true);
+    document.addEventListener('keyup', e => keys[e.code] = false);
 
-    // Clock for delta movement
     const clock = new THREE.Clock();
 
-    function handleMovement(delta) {
+    function movePlayer(delta) {
       const speed = 5;
       const direction = new THREE.Vector3();
 
-      if (keys["KeyW"]) direction.z -= 1;
-      if (keys["KeyS"]) direction.z += 1;
-      if (keys["KeyA"]) direction.x -= 1;
-      if (keys["KeyD"]) direction.x += 1;
+      if (keys['KeyW']) direction.z -= 1;
+      if (keys['KeyS']) direction.z += 1;
+      if (keys['KeyA']) direction.x -= 1;
+      if (keys['KeyD']) direction.x += 1;
 
-      direction.normalize().applyEuler(camera.rotation);
-      controls.moveRight(direction.x * speed * delta);
-      controls.moveForward(direction.z * speed * delta);
+      direction.normalize();
+      if (direction.length() === 0) return;
+
+      // Move relative to camera rotation on the horizontal plane (ignore vertical)
+      const angle = camera.rotation.y;
+      const sin = Math.sin(angle);
+      const cos = Math.cos(angle);
+
+      const moveX = direction.x * cos - direction.z * sin;
+      const moveZ = direction.z * cos + direction.x * sin;
+
+      controls.moveRight(moveX * speed * delta);
+      controls.moveForward(moveZ * speed * delta);
     }
 
-    // Grid + cube
+    // Grid helper & cube
     const gridHelper = new THREE.GridHelper(100, 10, 0x888888, 0x888888);
     scene.add(gridHelper);
 
@@ -132,50 +158,50 @@
     );
     scene.add(cube);
 
+    // Animation loop
     function animate() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
-      handleMovement(delta);
+
+      movePlayer(delta);
+
       cube.rotation.y += 0.01;
+
       renderer.render(scene, camera);
     }
     animate();
 
-    window.addEventListener("resize", () => {
-      camera.aspect = innerWidth / innerHeight;
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
     // Inventory toggle
-    const inventory = document.getElementById("inventory");
-    const toggleBtn = document.getElementById("toggleInventory");
-    toggleBtn.addEventListener("click", () => {
-      inventory.classList.toggle("hidden");
+    const inventory = document.getElementById('inventory');
+    const toggleBtn = document.getElementById('toggleInventory');
+    toggleBtn.addEventListener('click', () => {
+      inventory.classList.toggle('hidden');
     });
 
-    // Touch/drag logic
-    const slots = document.querySelectorAll(".inventory-slot");
-    slots.forEach((slot) => {
-      slot.addEventListener("touchstart", (e) => {
-        const img = slot.querySelector("img");
-        if (img) img.dataset.dragging = "true";
+    // Touch/drag logic for inventory slots
+    const slots = document.querySelectorAll('.inventory-slot');
+    slots.forEach(slot => {
+      slot.addEventListener('touchstart', e => {
+        const img = slot.querySelector('img');
+        if (img) img.dataset.dragging = 'true';
       });
-
-      slot.addEventListener("touchend", (e) => {
-        const dragging = document.querySelector("img[data-dragging='true']");
+      slot.addEventListener('touchend', e => {
+        const dragging = document.querySelector('img[data-dragging="true"]');
         if (dragging && dragging !== slot.firstChild) {
-          dragging.removeAttribute("data-dragging");
-          slot.innerHTML = "";
+          dragging.removeAttribute('data-dragging');
+          slot.innerHTML = '';
           slot.appendChild(dragging);
         }
       });
-
-      slot.addEventListener("click", () => {
-        const img = slot.querySelector("img");
-        if (img) {
-          console.log("Touched item in slot:", slot.dataset.slot);
-        }
+      slot.addEventListener('click', () => {
+        const img = slot.querySelector('img');
+        if (img) console.log('Touched item in slot:', slot.dataset.slot);
       });
     });
   </script>
