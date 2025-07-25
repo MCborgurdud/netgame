@@ -1,104 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Minecraft Inventory UI 3D</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-
-    #inventory {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(150, 150, 150, 0.8);
-      padding: 10px;
-      display: flex;
-      gap: 10px;
-      display: none; /* Start hidden */
-    }
-
-    .item {
-      width: 48px;
-      height: 48px;
-      background-color: #888;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: white;
-    }
-
-    #toggleBtn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 10;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Minecraft Inventory UI 3D</title>
+<style>
+body { margin: 0; overflow: hidden; }
+canvas { display: block; }
+</style>
 </head>
 <body>
-  <button id="toggleBtn">Toggle Inventory</button>
-  <div id="inventory">
-    <div class="item">Item 1</div>
-    <div class="item">Item 2</div>
-    <div class="item">Item 3</div>
-  </div>
-
-  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.min.js';
-
-    console.log("✅ Three.js loaded:", THREE);
-
-    // Scene setup
-    const scene = new THREE.Scene();
-    console.log("✅ Scene created");
-
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    console.log("✅ Camera created");
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    console.log("✅ Renderer added to DOM");
-
-    // Add cube
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-    console.log("✅ Cube added");
-
-    camera.position.z = 5;
-
-    // Animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    }
-
-    animate();
-    console.log("✅ Animation started");
-
-    // Inventory toggle
-    const inventory = document.getElementById('inventory');
-    const toggleBtn = document.getElementById('toggleBtn');
-
-    toggleBtn.addEventListener('click', () => {
-      inventory.style.display = (inventory.style.display === 'none') ? 'flex' : 'none';
-      console.log("🧭 Inventory toggled:", inventory.style.display);
-    });
-
-    // Resize handler
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      console.log("🧾 Window resized");
-    });
-  </script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.min.js';
+// Scene setup
+const scene = new THREE.Scene()
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+const geometry = new THREE.BoxGeometry();
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+camera.position.z = 5;
+function animate() {
+requestAnimationFrame(animate);
+cube.rotation.x += 0.01;
+cube.rotation.y += 0.01;
+renderer.render(scene, camera);
+}
+animate();
+const inventory = document.getElementById('inventory');
+const toggleBtn = document.getElementById('toggleBtn');
+toggleBtn.addEventListener('click', () => {
+inventory.style.display = (inventory.style.display === 'none') ? 'flex' : 'none';
+console.log("🧭 Inventory toggled:", inventory.style.display);
+});
+// Resize handler
+wndow.addEventListener('resize', () => {
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+console.log("🧾 Window resized");
+});
+</script>
 </body>
 </html>
