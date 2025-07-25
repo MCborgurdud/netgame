@@ -2,173 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Minecraft Clone Test</title>
+  <title>Minecraft Inventory UI 3D</title>
   <style>
-    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    body { margin: 0; overflow: hidden; }
     canvas { display: block; }
 
     #inventory {
       position: absolute;
-      bottom: 20px;
+      bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
+      background-color: rgba(150, 150, 150, 0.8);
+      padding: 10px;
       display: flex;
       gap: 10px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 10px;
-      border-radius: 10px;
+      display: none; /* Start hidden */
     }
 
-    #inventory img {
-      width: 40px;
-      height: 40px;
-    }
-
-    #instructions {
-      position: absolute;
-      top: 40%;
-      width: 100%;
-      text-align: center;
+    .item {
+      width: 48px;
+      height: 48px;
+      background-color: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
       color: white;
-      font-size: 20px;
-      z-index: 10;
-      cursor: pointer;
     }
 
-    #toggleInventory {
+    #toggleBtn {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 8px 16px;
-      font-size: 16px;
+      top: 20px;
+      right: 20px;
       z-index: 10;
     }
   </style>
 </head>
 <body>
-  <div id="instructions">Click to play</div>
-  <button id="toggleInventory">Toggle Inventory</button>
+  <button id="toggleBtn">Toggle Inventory</button>
   <div id="inventory">
-    <img src="item1.png" alt="Item 1">
-    <img src="item2.png" alt="Item 2">
-    <img src="item3.png" alt="Item 3">
+    <div class="item">Item 1</div>
+    <div class="item">Item 2</div>
+    <div class="item">Item 3</div>
   </div>
 
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js';
-    import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/controls/PointerLockControls.js';
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.min.js';
 
-    console.log("Starting script...");
+    console.log("✅ Three.js loaded:", THREE);
 
+    // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x88ccff);
-    console.log("Scene created.");
+    console.log("✅ Scene created");
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.y = 1.6;
-    console.log("Camera initialized at:", camera.position);
+    console.log("✅ Camera created");
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-    console.log("Renderer added.");
+    console.log("✅ Renderer added to DOM");
 
-    const controls = new PointerLockControls(camera, document.body);
-    console.log("PointerLockControls setup.");
-
-    const instructions = document.getElementById('instructions');
-    instructions.addEventListener('click', () => {
-      controls.lock();
-    });
-
-    controls.addEventListener('lock', () => {
-      instructions.style.display = 'none';
-      console.log("Pointer locked.");
-    });
-
-    controls.addEventListener('unlock', () => {
-      instructions.style.display = '';
-      console.log("Pointer unlocked.");
-    });
-
-    scene.add(controls.getObject());
-
-    const gridHelper = new THREE.GridHelper(100, 100);
-    scene.add(gridHelper);
-    console.log("Grid added.");
-
+    // Add cube
     const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const cube = new THREE.Mesh(geometry, material);
-    cube.position.y = 0.5;
     scene.add(cube);
-    console.log("Cube added.");
+    console.log("✅ Cube added");
 
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-    light.position.set(0, 20, 0);
-    scene.add(light);
-    console.log("Light added.");
+    camera.position.z = 5;
 
-    const move = { forward: false, backward: false, left: false, right: false };
-    const velocity = new THREE.Vector3();
-
-    document.addEventListener('keydown', (e) => {
-      switch (e.code) {
-        case 'KeyW': move.forward = true; break;
-        case 'KeyS': move.backward = true; break;
-        case 'KeyA': move.left = true; break;
-        case 'KeyD': move.right = true; break;
-      }
-    });
-
-    document.addEventListener('keyup', (e) => {
-      switch (e.code) {
-        case 'KeyW': move.forward = false; break;
-        case 'KeyS': move.backward = false; break;
-        case 'KeyA': move.left = false; break;
-        case 'KeyD': move.right = false; break;
-      }
-    });
-
-    const toggleBtn = document.getElementById('toggleInventory');
-    const inventory = document.getElementById('inventory');
-    toggleBtn.addEventListener('click', () => {
-      inventory.style.display = inventory.style.display === 'none' ? 'flex' : 'none';
-      console.log("Inventory toggled.");
-    });
-
-    const clock = new THREE.Clock();
-
+    // Animation loop
     function animate() {
       requestAnimationFrame(animate);
-
-      const delta = clock.getDelta();
-      velocity.set(0, 0, 0);
-
-      const speed = 5;
-
-      if (controls.isLocked) {
-        if (move.forward) velocity.z -= speed * delta;
-        if (move.backward) velocity.z += speed * delta;
-        if (move.left) velocity.x -= speed * delta;
-        if (move.right) velocity.x += speed * delta;
-
-        controls.moveRight(velocity.x);
-        controls.moveForward(velocity.z);
-      }
-
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
       renderer.render(scene, camera);
     }
 
+    animate();
+    console.log("✅ Animation started");
+
+    // Inventory toggle
+    const inventory = document.getElementById('inventory');
+    const toggleBtn = document.getElementById('toggleBtn');
+
+    toggleBtn.addEventListener('click', () => {
+      inventory.style.display = (inventory.style.display === 'none') ? 'flex' : 'none';
+      console.log("🧭 Inventory toggled:", inventory.style.display);
+    });
+
+    // Resize handler
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      console.log("Window resized.");
+      console.log("🧾 Window resized");
     });
-
-    animate();
-    console.log("Animation loop started.");
   </script>
 </body>
 </html>
